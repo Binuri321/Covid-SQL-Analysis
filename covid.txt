@@ -1,0 +1,60 @@
+delete 
+from [dbo].[CovidDeaths$]
+where continent is null
+
+delete 
+from [dbo].[CovidVaccinations$]
+where continent is null
+
+DELETE 
+FROM [dbo].[CovidDeaths$]
+WHERE population <= 0 OR total_cases < 0 OR total_deaths < 0;
+
+DELETE FROM [dbo].[CovidVaccinations$]
+WHERE total_vaccinations < 0 OR people_vaccinated < 0;
+
+select * from [dbo].[CovidDeaths$]
+select * from [dbo].[CovidVaccinations$]
+
+
+
+
+SELECT location,
+       MAX(total_cases) AS total_cases,
+       MAX(total_deaths) AS total_deaths,
+       ROUND(MAX(total_deaths) / NULLIF(MAX(total_cases), 0) * 100, 2) AS death_rate
+FROM [dbo].[CovidDeaths$]
+GROUP BY location
+ORDER BY total_cases DESC;
+
+select location,population,
+       MAX(total_cases) AS total_cases,
+	   ROUND(MAX(total_cases)/population*100,2) AS infection_rate
+from [dbo].[CovidDeaths$]
+group by location,population
+order by infection_rate DESC
+
+select location,
+       MAX(people_vaccinated) AS people_vaccinated,
+	   MAX(people_fully_vaccinated) AS people_fully_vaccinated
+
+from [dbo].[CovidVaccinations$]
+group by location
+order by people_vaccinated DESC
+
+select d.location,d.date,d.total_cases,d.total_deaths,v.people_vaccinated,v.people_fully_vaccinated
+from [dbo].[CovidDeaths$] d
+join [dbo].[CovidVaccinations$] v
+on d.date=v.date
+and d.location=v.location
+
+select d.location,d.population,
+       MAX(v.people_vaccinated) AS people_vaccinated,
+	   ROUND(MAX(v.people_vaccinated)/population*100,2) AS vaccinated_percent
+from [dbo].[CovidDeaths$] d
+join [dbo].[CovidVaccinations$] v
+on d.date=v.date
+and d.location=v.location
+WHERE d.continent IS NOT NULL 
+GROUP BY d.location, d.population
+ORDER BY vaccinated_percent DESC;
